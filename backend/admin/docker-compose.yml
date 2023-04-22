@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  backend:
+    build: #build the image from the Dockerfile in the current directory
+      context: .
+      dockerfile: Dockerfile
+    command: 'python manage.py runserver 0.0.0.0:8000'
+    ports:
+      - 8000:8000 #map the port 8000 of the container(right) to the port 8000 of the host
+    
+    volumes:
+      - .:/app #maps changes in the current directory to the /app directory in the container
+    depends_on:
+      - db 
+      
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    command: 'python consumer.py'
+    depends_on:
+      - db
+      
+  db:
+    image: mysql:5.7.22
+    restart: always
+    environment:
+      MYSQL_DATABASE: admin
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - .dbdata:/var/lib/mysql #maps the /var/lib/mysql directory in the container to the .dbdata directory in the host
+    ports:
+      - 33066:3306 #not same port as it might cause conflict with mysql installation
